@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JavaScript Calendar: Selecting and Highlighting Columns</title>
+
+  <style type="text/css">
+    p, body, td { font-family: Tahoma, Arial, Helvetica, sans-serif; font-size: 10pt; }
+    body { padding: 0px; margin: 0px; background-color: #ffffff; }
+    a { color: #1155a3; }
+    .space { margin: 10px 0px 10px 0px; }
+    .header { background: #003267; background: linear-gradient(to right, #011329 0%,#00639e 44%,#011329 100%); padding:20px 10px; color: white; box-shadow: 0px 0px 10px 5px rgba(0,0,0,0.75); }
+    .header a { color: white; }
+    .header h1 a { text-decoration: none; }
+    .header h1 { padding: 0px; margin: 0px; }
+    .main { padding: 10px; margin-top: 10px; }
+    .generated { color: #999; margin-top: 10px; }
+    .generated a { color: #999; }
+  </style>
+
+  <!-- DayPilot library -->
+  <script src="js/daypilot/daypilot-all.min.js"></script>
+
+</head>
+<body>
+<div class="header">
+  <h1><a href='https://code.daypilot.org/68382/javascript-calendar-selecting-and-highlighting-columns'>JavaScript Calendar: Selecting and Highlighting Columns</a></h1>
+  <div><a href="https://javascript.daypilot.org/">DayPilot for JavaScript</a> - HTML5 Calendar/Scheduling Components for JavaScript/Angular/React/Vue</div>
+</div>
+
+<div class="main">
+  <div id="dp"></div>
+  <div class="generated">Generated using <a href="https://builder.daypilot.org/">DayPilot UI Builder</a>.</div>
+</div>
+
+<script>
+  const selection = {
+    columns: []
+  };
+
+  const dp = new DayPilot.Calendar("dp", {
+    viewType: "Week",
+    cellHeight: 30,
+    timeRangeSelectedHandling: "Enabled",
+    onTimeRangeSelected: async (args) => {
+      const modal = await DayPilot.Modal.prompt("Create a new event:", "Event 1");
+      const calendar = args.control;
+      calendar.clearSelection();
+      if (modal.canceled) { return; }
+      calendar.events.add({
+        start: args.start,
+        end: args.end,
+        id: DayPilot.guid(),
+        text: modal.result
+      });
+    },
+    onHeaderClick: (args) => {
+      const id = args.column.start.toString();
+      const ctrl = args.ctrl || args.meta;
+
+      const alreadySelected = selection.columns.includes(id);
+
+      if (alreadySelected) {
+        if (ctrl) {
+          const index = selection.columns.indexOf(id);
+          selection.columns.splice(index, 1);
+        }
+        else {
+          selection.columns = [id];
+        }
+      }
+      else {
+        if (!ctrl) {
+          selection.columns = [];
+        }
+        selection.columns.push(id);
+      }
+      dp.update();
+    },
+    onBeforeHeaderRender: (args) => {
+      const id = args.column.start.toString();
+      if (selection.columns.includes(id)) {
+        args.header.backColor = "#e06666";
+      }
+    },
+    onBeforeCellRender: (args) => {
+      const id = args.cell.start.getDatePart().toString();
+      if (selection.columns.includes(id)) {
+        args.cell.properties.backColor = "#ea9999";
+      }
+    }
+  });
+  dp.events.list = [
+    {
+      id: "1",
+      start: DayPilot.Date.today().addHours(10),
+      end: DayPilot.Date.today().addHours(12),
+      text: "Event 1"
+    }
+  ];
+  dp.init();
+</script>
+
+</body>
+</html>
